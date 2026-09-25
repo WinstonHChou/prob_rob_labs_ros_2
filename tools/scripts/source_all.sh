@@ -23,6 +23,8 @@ if [ -f "${PROB_ROB_LOCAL}" ]; then
     source ${PROB_ROB_LOCAL};
 fi;
 
+export TURTLEBOT3_MODEL=waffle_pi
+
 function RMW()
 {
 	if [[ $1 == "cyclonedds" ]]
