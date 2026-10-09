@@ -11,6 +11,8 @@ WAIT_FOR_DRIVE   = 10.0 # seconds
 TORQUE_DOOR_OPEN = 3.0    # N*m
 TORQUE_DOOR_CLOSED = -3.0 # N*m
 
+DEFAULT_SPEED = 0.5
+
 STATE_OPEN = 'open'
 STATE_DRIVE = 'drive'
 STATE_STOP = 'stop'
@@ -18,6 +20,11 @@ STATE_STOP = 'stop'
 class Lab2(Node):
     def __init__(self):
         super().__init__('lab2')
+
+        self.declare_parameter('speed', DEFAULT_SPEED)
+        self.speed = self.get_parameter('speed').get_parameter_value().double_value
+        if self.speed != DEFAULT_SPEED:
+            self.get_logger().info(f'Speed set to {self.speed}')
 
         self.door_torque_pub = self.create_publisher(Float64, 'door_torque', 10)
         self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
@@ -61,7 +68,7 @@ class Lab2(Node):
                 self.get_logger().info(f'state changed to {self.state}.')
                 return
             twist_msg.header.stamp = now.to_msg()
-            twist_msg.twist.linear.x = 1.0
+            twist_msg.twist.linear.x = self.speed
             self.cmd_vel_pub.publish(twist_msg)
 
         elif self.state == STATE_STOP:
