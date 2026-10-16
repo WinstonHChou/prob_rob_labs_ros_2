@@ -4,7 +4,7 @@ from std_msgs.msg import Float64, Bool, Empty
 
 import numpy as np
 
-GOOD_BEL_THRESHOLD = 0.9999
+GOOD_BEL_THRESHOLD = 0.99
 FEATURE_MEAN_X_THRESHOLD = 321.878 # px (260 without firetruck, 321.878 with firetruck)
 
 DOOR_OPEN_IDX   = 0
