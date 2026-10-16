@@ -17,12 +17,40 @@ def generate_launch_description():
                               description='set the speed for the lab3 node'),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(get_package_share_directory('prob_rob_labs'),
-                             'launch', 'turtlebot3_and_door_launch.py')
+                os.path.join(
+                    get_package_share_directory('prob_rob_labs'),
+                    'launch', 
+                    'turtlebot3_door_and_firetruck_launch.py'
+                    # 'turtlebot3_and_door_launch.py'
+                )
             ),
             launch_arguments={
                 'run_vision_processor': str(True),
             }.items()
+        ),
+        # Node(
+        #     package='prob_rob_labs',
+        #     executable='door_calibration',
+        #     name='door_calibration',
+        #     parameters=[
+        #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
+        #     ],
+        #     remappings=[
+        #         ('door_torque', '/hinged_glass_door/torque'),
+        #         ('feature_mean_x', '/feature_mean'),
+        #     ],
+        # ),
+        Node(
+            package='prob_rob_labs',
+            executable='door_estimator',
+            name='door_estimator',
+            parameters=[
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            ],
+            remappings=[
+                ('feature_mean_x', '/feature_mean'),
+                ('is_door_opened', '/is_door_opened'),
+            ],
         ),
         Node(
             package='prob_rob_labs',
@@ -35,7 +63,7 @@ def generate_launch_description():
             remappings=[
                 ('door_torque', '/hinged_glass_door/torque'),
                 ('cmd_vel', '/cmd_vel'),
-                ('feature_mean_x', '/feature_mean'),
+                # ('feature_mean_x', '/feature_mean'),
             ],
         )
     ])

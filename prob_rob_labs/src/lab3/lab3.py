@@ -1,13 +1,11 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import TwistStamped
 
 
 HEARTBEAT_PERIOD = 0.1  # seconds
 WAIT_FOR_DRIVE = 10.0   # seconds
-
-FEATURE_MEAN_X_THRESHOLD = 260 # px
 
 TORQUE_DOOR_OPEN = 3.0    # N*m
 TORQUE_DOOR_CLOSED = -3.0 # N*m
@@ -27,9 +25,9 @@ class Lab3(Node):
         if self.speed != DEFAULT_SPEED:
             self.get_logger().info(f'Speed set to {self.speed}')
 
-        self.feature_mean_x_sub = self.create_subscription(Float64, 'feature_mean_x',
-                                                           self.on_feature_mean_x, 10)
-        self.feature_mean_x = None
+        self.is_door_opened_sub = self.create_subscription(
+            Bool, 'is_door_opened', self.on_is_door_opened, 10)
+        self.is_door_opened = False
 
         self.door_torque_pub = self.create_publisher(Float64, 'door_torque', 10)
         self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
@@ -58,8 +56,7 @@ class Lab3(Node):
 
         # State machine for door and drive control
         if self.state == STATE_OPEN:
-            if self.feature_mean_x is not None and \
-               self.feature_mean_x < FEATURE_MEAN_X_THRESHOLD:
+            if self.is_door_opened:
                 self.state = STATE_DRIVE
                 self.last_state_stamp = now
                 self.get_logger().info(f'state changed to {self.state}.')
@@ -86,8 +83,8 @@ class Lab3(Node):
             self.door_torque_pub.publish(torque_msg)
             self.cmd_vel_pub.publish(twist_msg)
 
-    def on_feature_mean_x(self, msg):
-        self.feature_mean_x = msg.data
+    def on_is_door_opened(self, msg):
+        self.is_door_opened = msg.data
 
     def spin(self):
         rclpy.spin(self)
