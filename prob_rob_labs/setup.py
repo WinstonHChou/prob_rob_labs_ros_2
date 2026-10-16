@@ -35,6 +35,8 @@ setup(
         'console_scripts': [
             'lab2 = lab2.lab2:main',
             'lab3 = lab3.lab3:main',
+            'door_calibration = lab3.door_calibration:main',
+            'door_estimator = lab3.door_estimator:main',
             'gz_twist_publisher = gz_twist_publisher.gz_twist_publisher:main',
             'image_mean_feature_x = image_mean_feature_x.image_mean_feature_x:main',
             'flaky_door_opener = flaky_door_opener.flaky_door_opener:main',

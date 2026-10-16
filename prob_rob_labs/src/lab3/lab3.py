@@ -74,12 +74,14 @@ class Lab3(Node):
                 self.get_logger().info(f'state changed to {self.state}.')
                 return
             twist_msg.header.stamp = now.to_msg()
+            twist_msg.header.frame_id = 'base_footprint'
             twist_msg.twist.linear.x = self.speed
             self.cmd_vel_pub.publish(twist_msg)
 
         elif self.state == STATE_STOP:
             torque_msg.data = TORQUE_DOOR_CLOSED
             twist_msg.header.stamp = now.to_msg()
+            twist_msg.header.frame_id = 'base_footprint'
             twist_msg.twist.linear.x = 0.0
             self.door_torque_pub.publish(torque_msg)
             self.cmd_vel_pub.publish(twist_msg)
