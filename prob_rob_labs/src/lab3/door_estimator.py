@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Bool, Empty
 
 import numpy as np
 
@@ -12,6 +12,13 @@ DOOR_CLOSED_IDX = 1
 
 BEL_INIT = np.array([[0.5], [0.5]])  # Initial belief: 50% open, 50% closed
 
+# Motion model from measured result
+OBSERVED_PUSH_SUCCESS_RATE = 7/27
+P_F_PUSH = np.array([
+    [1.0, OBSERVED_PUSH_SUCCESS_RATE],
+    [0.0, 1.0 - OBSERVED_PUSH_SUCCESS_RATE]
+])
+
 # Collected from calibration results
 P_H = np.array([
     [0.9562, 0.1039],
@@ -22,6 +29,8 @@ class DoorEstimator(Node):
     def __init__(self):
         super().__init__('door_estimator')
 
+        self.door_open_sub = self.create_subscription(Empty, 'door_open',
+                                                      self.on_door_open_cmd, 10)
         self.feature_mean_x_sub = self.create_subscription(Float64, 'feature_mean_x',
                                                            self.on_feature_mean_x, 10)
 
@@ -29,6 +38,10 @@ class DoorEstimator(Node):
 
         self.bel = BEL_INIT.copy()
         self.get_logger().info('Door Estimator initialized.')
+
+    def on_door_open_cmd(self, msg):
+        # Predict belief based on the motion model
+        self.bel = self.predict(self.bel)
 
     def on_feature_mean_x(self, msg):
         feature_mean_x = msg.data
@@ -48,6 +61,11 @@ class DoorEstimator(Node):
             f'P(closed)={p_closed:.6f}, '
             f'ready={ready}'
         )
+
+    def predict(self, bel):
+        # Predict belief based on the motion model
+        bel_pred = P_F_PUSH @ bel
+        return bel_pred
 
     def update(self, bel, feature_mean_x):
         # Compute the likelihood of the observation given the door state

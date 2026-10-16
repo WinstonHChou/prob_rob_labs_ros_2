@@ -1,13 +1,13 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Bool, Empty
 from geometry_msgs.msg import TwistStamped
 
 
 HEARTBEAT_PERIOD = 0.1  # seconds
 WAIT_FOR_DRIVE = 10.0   # seconds
 
-TORQUE_DOOR_OPEN = 3.0    # N*m
+# TORQUE_DOOR_OPEN = 3.0    # N*m
 TORQUE_DOOR_CLOSED = -3.0 # N*m
 
 DEFAULT_SPEED = 0.5
@@ -30,6 +30,7 @@ class Lab3(Node):
         self.is_door_opened = False
 
         self.door_torque_pub = self.create_publisher(Float64, 'door_torque', 10)
+        self.door_open_pub = self.create_publisher(Empty, 'door_open', 10)
         self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
 
         self.timer = self.create_timer(HEARTBEAT_PERIOD, self.heartbeat)
@@ -61,8 +62,9 @@ class Lab3(Node):
                 self.last_state_stamp = now
                 self.get_logger().info(f'state changed to {self.state}.')
                 return
-            torque_msg.data = TORQUE_DOOR_OPEN
-            self.door_torque_pub.publish(torque_msg)
+            # torque_msg.data = TORQUE_DOOR_OPEN
+            # self.door_torque_pub.publish(torque_msg)
+            self.door_open_pub.publish(Empty())
 
         elif self.state == STATE_DRIVE:
             if elapsed >= WAIT_FOR_DRIVE:

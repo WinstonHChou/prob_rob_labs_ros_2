@@ -26,6 +26,7 @@ def generate_launch_description():
             ),
             launch_arguments={
                 'run_vision_processor': str(True),
+                'run_door_opener': str(True),
             }.items()
         ),
         # Node(
@@ -48,6 +49,7 @@ def generate_launch_description():
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
             ],
             remappings=[
+                ('door_open', '/door_open'),
                 ('feature_mean_x', '/feature_mean'),
                 ('is_door_opened', '/is_door_opened'),
             ],
@@ -62,6 +64,7 @@ def generate_launch_description():
             ],
             remappings=[
                 ('door_torque', '/hinged_glass_door/torque'),
+                ('door_open', '/door_open'),
                 ('cmd_vel', '/cmd_vel'),
                 # ('feature_mean_x', '/feature_mean'),
             ],
