@@ -37,6 +37,7 @@ setup(
             'lab3 = lab3.lab3:main',
             'door_calibration = lab3.door_calibration:main',
             'door_estimator = lab3.door_estimator:main',
+            'twist_calibration = lab4.twist_calibration:main',
             'gz_twist_publisher = gz_twist_publisher.gz_twist_publisher:main',
             'image_mean_feature_x = image_mean_feature_x.image_mean_feature_x:main',
             'flaky_door_opener = flaky_door_opener.flaky_door_opener:main',
