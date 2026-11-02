@@ -3,7 +3,7 @@ import math
 import message_filters
 import numpy as np
 import rclpy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
@@ -55,7 +55,7 @@ class EkfOdometry(Node):
         self._warned_missing_joints = False
 
         self._odom_publisher = self.create_publisher(Odometry, ODOM_TOPIC, 10)
-        self.create_subscription(Twist, CMD_VEL_TOPIC, self._command_callback, 10)
+        self.create_subscription(TwistStamped, CMD_VEL_TOPIC, self._command_callback, 10)
 
         self._joint_subscriber = message_filters.Subscriber(
             self, JointState, JOINT_STATES_TOPIC,
@@ -74,7 +74,7 @@ class EkfOdometry(Node):
             f'publishing EKF odometry on {ODOM_TOPIC}')
 
     def _command_callback(self, msg):
-        self._last_command[:] = [msg.linear.x, msg.angular.z]
+        self._last_command[:] = [msg.twist.linear.x, msg.twist.angular.z]
         self._last_command_time_ns = self.get_clock().now().nanoseconds
 
     def _active_command(self, now_ns):
