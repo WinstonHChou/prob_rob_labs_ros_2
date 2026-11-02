@@ -32,6 +32,14 @@ class EkfOdomMetric(Node):
 
     def _on_sync_data(
         self, ekf_odom_msg: Odometry, gt_pose_msg: PoseStamped):
+        dx = (
+            ekf_odom_msg.pose.pose.position.x
+            - gt_pose_msg.pose.position.x
+        )
+        dy = (
+            ekf_odom_msg.pose.pose.position.y
+            - gt_pose_msg.pose.position.y
+        )
         error_quat = tft.quaternion_multiply(
             tft.quaternion_conjugate([
                 gt_pose_msg.pose.orientation.x,
@@ -47,12 +55,11 @@ class EkfOdomMetric(Node):
             ]
         )
         error_euler = tft.euler_from_quaternion(error_quat)
+
         error_metric = Float64MultiArray()
-        error_metric.data = [
-            ekf_odom_msg.pose.pose.position.x - gt_pose_msg.pose.position.x,
-            ekf_odom_msg.pose.pose.position.y - gt_pose_msg.pose.position.y,
-            error_euler[2]
-        ]
+        position_error = float(np.hypot(dx, dy))
+        yaw_error = float(error_euler[2])
+        error_metric.data = [position_error, yaw_error]
         self._error_metric_pub.publish(error_metric)
 
 

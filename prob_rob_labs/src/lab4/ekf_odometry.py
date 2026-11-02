@@ -42,7 +42,7 @@ class EkfOdometry(Node):
         self.linear_gain = float(self.declare_parameter('linear_gain', 1.0).value)
         self.angular_gain = float(self.declare_parameter('angular_gain', 1.0).value)
         self.linear_tau = float(self.declare_parameter('linear_tau', 0.21).value)
-        self.angular_tau = float(self.declare_parameter('angular_tau', 0.05).value)
+        self.angular_tau = float(self.declare_parameter('angular_tau', 0.035).value)
 
         if self.linear_tau <= 0.0 or self.angular_tau <= 0.0:
             raise ValueError('linear_tau and angular_tau must be greater than zero')
@@ -156,8 +156,8 @@ class EkfOdometry(Node):
             [0, 0],
             [0, 0],
             [0, 0],
-            [1 - a_v, 0],
-            [0, 1 - a_w],
+            [self.linear_gain * (1 - a_v), 0],
+            [0, self.angular_gain * (1 - a_w)],
         ])
         self._covariance = (
             Gx @ self._covariance @ Gx.T + Gu @ PROCESS_NOISE @ Gu.T
