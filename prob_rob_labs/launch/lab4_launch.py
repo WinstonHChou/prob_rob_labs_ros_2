@@ -7,8 +7,6 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-DEFAULT_SPEED = 0.5
-
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true',
@@ -22,43 +20,47 @@ def generate_launch_description():
                 )
             ),
         ),
+        # Node(
+        #     package='prob_rob_labs',
+        #     executable='twist_calibration',
+        #     name='twist_calibration',
+        #     parameters=[
+        #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
+        #     ],
+        #     remappings=[
+        #         ('gt_twist', '/tb3/ground_truth/twist'),
+        #     ],
+        # ),
         Node(
             package='prob_rob_labs',
-            executable='twist_calibration',
-            name='twist_calibration',
+            executable='ekf_odometry',
+            name='ekf_odometry',
             parameters=[
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
             ],
             remappings=[
-                ('gt_twist', '/tb3/ground_truth/twist'),
+                ('cmd_vel', '/cmd_vel'),
+                ('joint_states', '/joint_states'),
+                ('imu', '/imu'),
             ],
         ),
-        # Node(
-        #     package='prob_rob_labs',
-        #     executable='door_estimator',
-        #     name='door_estimator',
-        #     parameters=[
-        #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
-        #     ],
-        #     remappings=[
-        #         ('door_open', '/door_open'),
-        #         ('feature_mean_x', '/feature_mean'),
-        #         ('is_door_opened', '/is_door_opened'),
-        #     ],
-        # ),
-        # Node(
-        #     package='prob_rob_labs',
-        #     executable='lab4',
-        #     name='lab4',
-        #     parameters=[
-        #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
-        #         {'speed': LaunchConfiguration('speed')},
-        #     ],
-        #     remappings=[
-        #         ('door_torque', '/hinged_glass_door/torque'),
-        #         ('door_open', '/door_open'),
-        #         ('twist', '/twist'),
-        #         # ('feature_mean_x', '/feature_mean'),
-        #     ],
-        # )
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=['--x', '0', '--y', '0', '--z', '0', 
+                       '--yaw', '0', '--pitch', '0', '--roll', '0', 
+                       '--frame-id', 'world', '--child-frame-id', 'odom']
+        ),
+        Node(
+            package='prob_rob_labs',
+            executable='ekf_odom_metric',
+            name='ekf_odom_metric',
+            parameters=[
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            ],
+            remappings=[
+                ('ekf_odom', '/ekf_odom'),
+                ('gt_pose', '/tb3/ground_truth/pose'),
+            ],
+        ),
     ])

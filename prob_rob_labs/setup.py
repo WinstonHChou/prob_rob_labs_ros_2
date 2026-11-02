@@ -38,6 +38,8 @@ setup(
             'door_calibration = lab3.door_calibration:main',
             'door_estimator = lab3.door_estimator:main',
             'twist_calibration = lab4.twist_calibration:main',
+            'ekf_odometry = lab4.ekf_odometry:main',
+            'ekf_odom_metric = lab4.ekf_odom_metric:main',
             'gz_twist_publisher = gz_twist_publisher.gz_twist_publisher:main',
             'image_mean_feature_x = image_mean_feature_x.image_mean_feature_x:main',
             'flaky_door_opener = flaky_door_opener.flaky_door_opener:main',
