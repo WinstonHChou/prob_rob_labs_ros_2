@@ -1,0 +1,3 @@
+prob_rob_msgs/LandmarkMeasurement measurement
+float64 distance_error
+float64 bearing_error

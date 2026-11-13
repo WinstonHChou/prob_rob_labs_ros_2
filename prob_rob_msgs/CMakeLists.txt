@@ -13,6 +13,7 @@ set(msg_files
   "msg/Point2D.msg"
   "msg/Point2DArrayStamped.msg"
   "msg/LandmarkMeasurement.msg"
+  "msg/LandmarkMeasurementError.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
