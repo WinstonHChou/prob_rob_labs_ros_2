@@ -14,14 +14,8 @@ LANDMARK_Y = 0.0
 CAMERA_OFFSET = 0.076  # meters, forward from robot origin
 CSV_PATH = 'landmark_errors.csv'
 
-
-"""
-WARNING: FOR THIS CODE TO RUN CORRECTLY IT NEEDS TO RUN ALONG WITH PARAMS_ESTIMATOR
-"""
-
 def wrap_angle(angle):
     return math.atan2(math.sin(angle), math.cos(angle))
-
 
 def quaternion_to_yaw(q):
     return math.atan2(
@@ -29,34 +23,9 @@ def quaternion_to_yaw(q):
         1.0 - 2.0 * (q.y**2 + q.z**2)
     )
 
-
-def true_measurement(pose, landmark_x, landmark_y, camera_offset):
-    # Robot ground truth pose in world frame
-    xr = pose.position.x
-    yr = pose.position.y
-    yaw = quaternion_to_yaw(pose.orientation)
-
-    # Camera position in world frame
-    xc = xr + camera_offset * math.cos(yaw)
-    yc = yr + camera_offset * math.sin(yaw)
-
-    # delta camera to landmark in world frame
-    dx = landmark_x - xc
-    dy = landmark_y - yc
-
-    # Transform to camera-aligned planar coordinates
-    forward = math.cos(yaw) * dx + math.sin(yaw) * dy #R(yaw) * dp
-    left = -math.sin(yaw) * dx + math.cos(yaw) * dy
-
-    distance = math.hypot(forward, left)
-    bearing = math.atan2(left, forward)
-
-    return distance, bearing
-
-
-class MeasurementErrorNode(Node):
+class MeasurementErrorLogger(Node):
     def __init__(self):
-        super().__init__('measurement_error')
+        super().__init__('measurement_error_logger')
 
         self.declare_parameter('landmark_x', LANDMARK_X)
         self.declare_parameter('landmark_y', LANDMARK_Y)
@@ -68,19 +37,19 @@ class MeasurementErrorNode(Node):
         self.camera_offset = self.get_parameter('camera_offset').value
         csv_path = self.get_parameter('csv_path').value
 
-        self.error_pub = self.create_publisher(
+        self._error_pub = self.create_publisher(
             LandmarkMeasurementError,
             '/landmark/measurement_error',
             10
         )
 
-        self.measurement_sub = Subscriber(
+        self._measurement_sub = Subscriber(
             self,
             LandmarkMeasurement,
             '/landmark/measurement'
         )
 
-        self.gt_sub = Subscriber(
+        self._gt_sub = Subscriber(
             self,
             PoseStamped,
             '/tb3/ground_truth/pose'
@@ -88,11 +57,11 @@ class MeasurementErrorNode(Node):
 
         # Match msgs from subscribers for timing
         self.sync = ApproximateTimeSynchronizer(
-            [self.measurement_sub, self.gt_sub],
+            [self._measurement_sub, self._gt_sub],
             queue_size=30,
             slop=0.08
         )
-        self.sync.registerCallback(self.callback)
+        self.sync.registerCallback(self._on_sync)
 
         # Saving outputs to a csv
         self.csv_file = open(csv_path, 'w', newline='')
@@ -108,8 +77,31 @@ class MeasurementErrorNode(Node):
 
         self.get_logger().info('Measurement error node started')
 
-    def callback(self, measurement, ground_truth):
-        true_distance, true_bearing = true_measurement(
+    def true_measurement(self, pose, landmark_x, landmark_y, camera_offset):
+        # Robot ground truth pose in world frame
+        xr = pose.position.x
+        yr = pose.position.y
+        yaw = quaternion_to_yaw(pose.orientation)
+
+        # Camera position in world frame
+        xc = xr + camera_offset * math.cos(yaw)
+        yc = yr + camera_offset * math.sin(yaw)
+
+        # delta camera to landmark in world frame
+        dx = landmark_x - xc
+        dy = landmark_y - yc
+
+        # Transform to camera-aligned planar coordinates
+        forward = math.cos(yaw) * dx + math.sin(yaw) * dy # R(-yaw) * dp
+        left = -math.sin(yaw) * dx + math.cos(yaw) * dy
+
+        distance = math.hypot(forward, left)
+        bearing = math.atan2(left, forward)
+
+        return distance, bearing
+
+    def _on_sync(self, measurement, ground_truth):
+        true_distance, true_bearing = self.true_measurement(
             ground_truth.pose,
             self.landmark_x,
             self.landmark_y,
@@ -126,7 +118,7 @@ class MeasurementErrorNode(Node):
         error_msg.distance_error = distance_error
         error_msg.bearing_error = bearing_error
 
-        self.error_pub.publish(error_msg)
+        self._error_pub.publish(error_msg)
 
         timestamp = (
             measurement.header.stamp.sec
@@ -156,7 +148,7 @@ class MeasurementErrorNode(Node):
 
 def main():
     rclpy.init()
-    node = MeasurementErrorNode()
+    node = MeasurementErrorLogger()
 
     try:
         rclpy.spin(node)
